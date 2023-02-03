@@ -13,18 +13,23 @@
 // limitations under the License.
 //
 
-
 using System.Diagnostics;
+using System.IO;
 using UnityEngine;
 
-namespace Unity.glTF.Validator {
-    
-    public static class Validator {
+namespace Unity.glTF.Validator
+{
+    public static class Validator
+    {
+        const string k_CommonValidatorPath = "Packages/com.unity.formats.gltf.validator/Apps~/gltf_validator-2.0.0-dev.3.8-";
 
-        public static Report Validate(string path) {
-            
-            var processInfo = new ProcessStartInfo {
-                FileName = "/usr/local/bin/gltf_validator",
+        public static Report Validate(string path)
+        {
+            var validatorPath = GetValidatorPath();
+
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = validatorPath,
                 Arguments = $"-o \"{path}\"",
                 CreateNoWindow = true,
                 UseShellExecute = false,
@@ -34,7 +39,8 @@ namespace Unity.glTF.Validator {
 
             var process = Process.Start(processInfo);
 
-            if (process != null) {
+            if (process != null)
+            {
                 var json = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
                 process.Close();
@@ -42,6 +48,24 @@ namespace Unity.glTF.Validator {
             }
 
             return null;
+        }
+
+        static string GetValidatorPath()
+        {
+            var relativePath = k_CommonValidatorPath + GetPlatformSubPath();
+            var fullPath = Path.GetFullPath(relativePath);
+            return fullPath;
+        }
+
+        static string GetPlatformSubPath()
+        {
+#if UNITY_EDITOR_WIN
+            return "win64/gltf_validator.exe";
+#elif UNITY_EDITOR_OSX
+            return "macos64/gltf_validator";
+#elif UNITY_EDITOR_LINUX
+            return "linux64/gltf_validator";
+#endif
         }
     }
 }
